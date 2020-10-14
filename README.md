@@ -11,7 +11,7 @@ $ yarn add https://github.com/reuters-graphics/chart-module-usstatecartogram.git
 ### Use
 
 ```javascript
-import USStateCartogram from '@reuters-graphics/chart-module-usstatecartogram';
+import USStateCartogram from '@reuters-graphics/chart-module-us-covid-cartogram';
 
 const myChart = new USStateCartogram();
 
@@ -37,7 +37,7 @@ To apply this chart's default styles when using SCSS, simply define the variable
 ```CSS
 $USStateCartogram-container: '#chart';
 
-@import '~@reuters-graphics/chart-module-usstatecartogram/scss/main';
+@import '~@reuters-graphics/chart-module-us-covid-cartogram/scss/main';
 ```
 
 ## Developing chart modules

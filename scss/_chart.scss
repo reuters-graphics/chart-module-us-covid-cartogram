@@ -1,9 +1,27 @@
 $half-white: hsla(0,0%,100%,.75);
 #{$USStateCartogram-container} {
-
+  position: relative;
   /* Write your chart styles here */
   .state-name{
-    fill: $half-white;
-    font-size: .8rem;
+    position: absolute;
+    p {
+        color: $half-white;
+        font-size: .8rem;
+        font-weight: 600;
+    }
+    p, svg{
+      display: inline-block;
+      vertical-align: bottom;
+      margin-bottom: 0;
+      line-height: 1rem;
+    }
+    .fa-caret-down{
+      color: #74c476;
+    }
+    .fa-caret-up{
+      color: #ee665b;
+    }
   }
+  
+
 }

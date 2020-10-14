@@ -7,6 +7,7 @@ import debounce from 'lodash/debounce';
 import data from './defaultData.json';
 const ChartComponent = () => {
   const [width, setWidth] = useState('');
+  const [parameter, setParameter] = useState('cases');
   // Create some chart props you want to change
 
   const chartContainer = React.createRef();
@@ -21,17 +22,14 @@ const ChartComponent = () => {
       .selection(chartContainer.current)
       .data([data])
       .draw();
-  });
 
-  // // Little showreel...
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setData([20, 34, 48, 60]);
-  //   }, 1000);
-  //   setTimeout(() => {
-  //     setData([30, 50, 30]);
-  //   }, 2000);
-  // }, []);
+    // setTimeout(() => {
+    //   console.log('running');
+    //   chart
+    //     .props({ uniformScale: true })
+    //     .draw();
+    // }, 1000);
+  });
 
   // Handle chart resize
   const resize = debounce(() => { chart.draw(); }, 250);

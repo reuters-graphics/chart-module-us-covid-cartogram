@@ -9,9 +9,12 @@ class USStateCartogram extends ChartComponent {
     stroke: '#eec331',
     strokeWidth: 1,
     fill: 'rgba(255, 255, 255, 0.3)',
-    height: 500,
+    height: 600,
     avg_days: 7,
     bars: true,
+    paddingX: 5,
+    paddingY: 5,
+
     uniformScale: false,
     margin: {
       left: 0, right: 0, top: 10, bottom: 0,
@@ -39,6 +42,9 @@ class USStateCartogram extends ChartComponent {
   };
 
   draw() {
+    const downArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" class="svg-inline--fa fa-caret-down fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"></path></svg>';
+    const upArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-up" class="svg-inline--fa fa-caret-up fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M288.662 352H31.338c-17.818 0-26.741-21.543-14.142-34.142l128.662-128.662c7.81-7.81 20.474-7.81 28.284 0l128.662 128.662c12.6 12.599 3.676 34.142-14.142 34.142z"></path></svg>';
+
     const data = this.data()[0];
     const props = this.props();
     const node = this.selection().node();
@@ -53,8 +59,8 @@ class USStateCartogram extends ChartComponent {
       data.states[key][props.parameter].reverse().forEach(function(d,i) {
         data.states[key].avg.push(d3.mean(data.states[key][props.parameter].slice(i, (i + props.avg_days)), d => d < 0 ? 0 : d))
       });
-      data.states[key].avg = data.states[key].avg.reverse()
-      data.states[key][props.parameter] = data.states[key][props.parameter].reverse()
+      data.states[key].avg.reverse();
+      data.states[key][props.parameter].reverse();
     }
 
     if (!data.series[0].getMonth) {
@@ -77,21 +83,26 @@ class USStateCartogram extends ChartComponent {
 
     const scaleXTime = d3.scaleTime()
       .domain(d3.extent(data.series))
-      .range([0, smallW-8]);
+      .range([0, smallW - props.paddingX]);
 
-    const scaleYAbs = d3.scaleLinear()
-      .domain([0, max])
-      .range([smallH, -smallH]);
+    const scaleY = d3.scaleLinear()
+    if (props.uniformScale) {
+      scaleY.domain([0, max])
+        .range([smallH*.95, -smallH*.6])
+    } else {
+      scaleY.domain([0, 1])
+        .range([smallH*.95, smallH*.25]);
+    }
 
     const line = d3.line()
       .x((d, i) => scaleXTime(data.series[i]))
-      .y((d, i) => scaleYAbs(d ? d : 0))
+      .y((d, i) => scaleY(d ? d : 0))
       .curve(d3.curveMonotoneX);
 
     const area = d3.area()
       .x((d, i) => scaleXTime(data.series[i]))
-      .y1((d, i) => scaleYAbs(d))
-      .y0(scaleYAbs(0))
+      .y1((d, i) => scaleY(d))
+      .y0(scaleY(0))
       .curve(d3.curveStep);
 
     const g = this.selection()
@@ -103,38 +114,78 @@ class USStateCartogram extends ChartComponent {
 
     const statesG = g.appendSelect('g.states-g')
       .selectAll('.state')
-      .data(props.stAbbr)
+      .data(props.stAbbr, d => d)
+
+    statesG
       .enter()
+      .merge(statesG)
       .appendSelect('g')
       .attr('class', (st) => {
         return `state ${st}`;
       });
 
-    statesG.attr('transform', (st) => {
-      const left = statePosition[st].column * smallW;
-      const top = statePosition[st].row * smallH;
+    statesG
+      .attr('transform', (st) => {
+        const left = statePosition[st].column * smallW;
+        const top = statePosition[st].row * smallH;
 
-      return `translate(${left},${top})`;
-    });
+        return `translate(${left},${top})`;
+      });
 
     statesG.appendSelect('path.area')
       .style('fill', props.fill)
+      .transition(transition)
       .attr('d', (d) => {
-        return area(data.states[d][props.parameter])
+        if (props.uniformScale) {
+          return area(data.states[d][props.parameter]);
+        } else {
+          return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
+        }
       });
 
     statesG.appendSelect('path.line')
       .style('stroke', props.stroke)
       .style('stroke-width', props.strokeWidth)
       .style('fill', 'none')
+      .transition(transition)
       .attr('d', (d) => {
-        return line(data.states[d].avg);
+        if (props.uniformScale) {
+          return line(data.states[d].avg);  
+        } else {
+          return line(data.states[d].avg.map(e => e / data.states[d].max));
+        }
       });
 
-    statesG.appendSelect('text.state-name')
-      .attr('transform', 'translate(0,20)')
-      .text(d => (data.states[d].stateAP));
+    const stateNames = this.selection()
+      .appendSelect('div.name-container')
+      .selectAll('.state-name')
+      .data(props.stAbbr)
 
+    stateNames.enter()
+      .appendSelect('div.state-name')
+      .merge(stateNames)
+      .style('top',function(d) {
+        const top = statePosition[d].row * smallH;
+        return `${top+props.paddingY}px`
+      })
+      .style('left',function(d) {
+        const left = statePosition[d].column * smallW;
+        return `${left}px`
+      })
+      .html(d => `${getArrow(data.states[d].avg)} <p>${data.states[d].stateAP}</p>`);
+
+    function getArrow(numbers) {
+      const latest = numbers[numbers.length - 1];
+      const previousWeek = numbers[numbers.length - 8];
+      const weekBefore = numbers[numbers.length - 15];
+      if (latest > previousWeek && previousWeek > weekBefore) {
+        return upArrow;
+      } else if (latest < previousWeek && previousWeek < weekBefore) {
+        return downArrow;
+      } else {
+        return '';
+      }
+    }
     function createGrid() {
       const gridArr = [];
       let row = -1;
