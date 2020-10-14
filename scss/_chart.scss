@@ -1,0 +1,9 @@
+$half-white: hsla(0,0%,100%,.75);
+#{$USStateCartogram-container} {
+
+  /* Write your chart styles here */
+  .state-name{
+    fill: $half-white;
+    font-size: .8rem;
+  }
+}
