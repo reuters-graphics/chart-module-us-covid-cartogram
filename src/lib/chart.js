@@ -131,9 +131,8 @@ class USStateCartogram extends ChartComponent {
         return `translate(${left}, ${top})`;
       });
 
-    const areaGroup = stateGCon.appendSelect('path.area')
+    stateGCon.appendSelect('path.area')
       .style('fill', props.fill)
-      .transition(transition)
       .attr('d', (d) => {
         if (props.uniformScale) {
           return area(data.states[d][props.parameter]);
@@ -142,11 +141,10 @@ class USStateCartogram extends ChartComponent {
         }
       });
 
-    const lineGroup = stateGCon.appendSelect('path.line')
+    stateGCon.appendSelect('path.line')
       .style('stroke', props.stroke)
       .style('stroke-width', props.strokeWidth)
       .style('fill', 'none')
-      .transition(transition)
       .attr('d', (d) => {
         if (props.uniformScale) {
           return line(data.states[d].avg);
