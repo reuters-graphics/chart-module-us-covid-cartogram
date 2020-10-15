@@ -51,12 +51,12 @@ class USStateCartogram extends ChartComponent {
     let max = 0;
     const timeParse = d3.utcParse('%Y-%m-%dT%H:%M:%S.%LZ');
     for (var key of Object.keys(data.states)) {
-      data.states[key].max = d3.max(data.states[key][props.parameter])
+      data.states[key].max = d3.max(data.states[key][props.parameter]);
       if (data.states[key].max > max) {
         max = data.states[key].max;
       }
       data.states[key].avg = [];
-      data.states[key][props.parameter].reverse().forEach(function(d,i) {
+      data.states[key][props.parameter].reverse().forEach(function(d, i) {
         data.states[key].avg.push(d3.mean(data.states[key][props.parameter].slice(i, (i + props.avg_days)), d => d < 0 ? 0 : d))
       });
       data.states[key].avg.reverse();
@@ -79,19 +79,19 @@ class USStateCartogram extends ChartComponent {
     const statePosition = {};
     const grid = createGrid();
     const rows = Math.floor(grid.length / divisor) + 1;
-    const smallH = (props.height-props.margin.top) / (rows - 1)
+    const smallH = (props.height - props.margin.top) / (rows - 1);
 
     const scaleXTime = d3.scaleTime()
       .domain(d3.extent(data.series))
       .range([0, smallW - props.paddingX]);
 
-    const scaleY = d3.scaleLinear()
+    const scaleY = d3.scaleLinear();
     if (props.uniformScale) {
       scaleY.domain([0, max])
-        .range([smallH*.95, -smallH*.6])
+        .range([smallH * 0.95, -smallH * -0.6])
     } else {
       scaleY.domain([0, 1])
-        .range([smallH*.95, smallH*.25]);
+        .range([smallH * 0.95, smallH * 0.25]);
     }
 
     const line = d3.line()
@@ -112,27 +112,26 @@ class USStateCartogram extends ChartComponent {
       .appendSelect('g')
       .attr('transform', `translate(${props.margin.left}, ${props.margin.top})`);
 
-    const statesG = g.appendSelect('g.states-g')
+    const statesG = g.appendSelect('g.states-g-group')
       .selectAll('.state')
-      .data(props.stAbbr, d => d)
+      .data(props.stAbbr, d => d);
 
-    statesG
+    const stateGCon = statesG
       .enter()
-      .merge(statesG)
       .appendSelect('g')
       .attr('class', (st) => {
         return `state ${st}`;
-      });
+      })
+      .merge(statesG)
 
-    statesG
+    stateGCon
       .attr('transform', (st) => {
         const left = statePosition[st].column * smallW;
         const top = statePosition[st].row * smallH;
-
-        return `translate(${left},${top})`;
+        return `translate(${left}, ${top})`;
       });
 
-    statesG.appendSelect('path.area')
+    const areaGroup = stateGCon.appendSelect('path.area')
       .style('fill', props.fill)
       .transition(transition)
       .attr('d', (d) => {
@@ -143,34 +142,39 @@ class USStateCartogram extends ChartComponent {
         }
       });
 
-    statesG.appendSelect('path.line')
+    const lineGroup = stateGCon.appendSelect('path.line')
       .style('stroke', props.stroke)
       .style('stroke-width', props.strokeWidth)
       .style('fill', 'none')
       .transition(transition)
       .attr('d', (d) => {
         if (props.uniformScale) {
-          return line(data.states[d].avg);  
+          return line(data.states[d].avg);
         } else {
           return line(data.states[d].avg.map(e => e / data.states[d].max));
         }
       });
 
+    statesG.exit()
+      .transition(transition)
+      .remove();
+
+
     const stateNames = this.selection()
       .appendSelect('div.name-container')
       .selectAll('.state-name')
-      .data(props.stAbbr)
+      .data(props.stAbbr);
 
     stateNames.enter()
       .appendSelect('div.state-name')
       .merge(stateNames)
-      .style('top',function(d) {
+      .style('top', function(d) {
         const top = statePosition[d].row * smallH;
-        return `${top+props.paddingY}px`
+        return `${top + props.paddingY}px`;
       })
-      .style('left',function(d) {
+      .style('left', function(d) {
         const left = statePosition[d].column * smallW;
-        return `${left}px`
+        return `${left}px`;
       })
       .html(d => `${getArrow(data.states[d].avg)} <p>${data.states[d].stateAP}</p>`);
 
@@ -186,6 +190,7 @@ class USStateCartogram extends ChartComponent {
         return '';
       }
     }
+
     function createGrid() {
       const gridArr = [];
       let row = -1;
