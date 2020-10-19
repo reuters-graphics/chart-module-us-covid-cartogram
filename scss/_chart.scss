@@ -7,7 +7,7 @@ $half-white: hsla(0,0%,100%,.75);
     p {
         color: $half-white;
         font-size: .8rem;
-        font-weight: 600;
+        font-weight: 200;
     }
     p, svg{
       display: inline-block;
@@ -21,6 +21,10 @@ $half-white: hsla(0,0%,100%,.75);
     .fa-caret-up{
       color: #ee665b;
     }
+  }
+
+  .state-name.bold p{
+    font-weight: bold;
   }
   
 

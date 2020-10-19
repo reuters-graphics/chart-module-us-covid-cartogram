@@ -13,7 +13,8 @@ class USStateCartogram extends ChartComponent {
     avg_days: 7,
     bars: true,
     paddingX: 5,
-    paddingY: 5,
+    paddingY: 5, 
+    mobileWidth: 650,
 
     uniformScale: false,
     margin: {
@@ -44,179 +45,217 @@ class USStateCartogram extends ChartComponent {
   draw() {
     const downArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" class="svg-inline--fa fa-caret-down fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"></path></svg>';
     const upArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-up" class="svg-inline--fa fa-caret-up fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M288.662 352H31.338c-17.818 0-26.741-21.543-14.142-34.142l128.662-128.662c7.81-7.81 20.474-7.81 28.284 0l128.662 128.662c12.6 12.599 3.676 34.142-14.142 34.142z"></path></svg>';
-
-    const data = this.data()[0];
     const props = this.props();
-    const node = this.selection().node();
-    let max = 0;
-    const timeParse = d3.utcParse('%Y-%m-%dT%H:%M:%S.%LZ');
-    for (var key of Object.keys(data.states)) {
-      data.states[key].max = d3.max(data.states[key][props.parameter]);
-      if (data.states[key].max > max) {
-        max = data.states[key].max;
-      }
-      data.states[key].avg = [];
-      data.states[key][props.parameter].reverse().forEach(function(d, i) {
-        data.states[key].avg.push(d3.mean(data.states[key][props.parameter].slice(i, (i + props.avg_days)), d => d < 0 ? 0 : d))
-      });
-      data.states[key].avg.reverse();
-      data.states[key][props.parameter].reverse();
-    }
-
-    if (!data.series[0].getMonth) {
-      for (var i = 0; i < data.series.length; i++) {
-        data.series[i] = timeParse(data.series[i]);
-      }
-    }
-
-    const { width } = node.getBoundingClientRect();
-
-    const transition = d3.transition()
-      .duration(750);
-
-    const divisor = width < 600 ? 6 : 11;
-    const smallW = width / divisor;
-    const statePosition = {};
-    const grid = createGrid();
-    const rows = Math.floor(grid.length / divisor) + 1;
-    const smallH = (props.height - props.margin.top) / (rows - 1);
-
-    const scaleXTime = d3.scaleTime()
-      .domain(d3.extent(data.series))
-      .range([0, smallW - props.paddingX]);
-
-    const scaleY = d3.scaleLinear();
-    if (props.uniformScale) {
-      scaleY.domain([0, max])
-        .range([smallH * 0.95, -smallH * -0.6])
-    } else {
-      scaleY.domain([0, 1])
-        .range([smallH * 0.95, smallH * 0.25]);
-    }
-
-    const line = d3.line()
-      .x((d, i) => scaleXTime(data.series[i]))
-      .y((d, i) => scaleY(d ? d : 0))
-      .curve(d3.curveMonotoneX);
-
-    const area = d3.area()
-      .x((d, i) => scaleXTime(data.series[i]))
-      .y1((d, i) => scaleY(d))
-      .y0(scaleY(0))
-      .curve(d3.curveStep);
-
-    const g = this.selection()
-      .appendSelect('svg') // see docs in ./utils/d3.js
-      .attr('width', width)
-      .attr('height', props.height)
-      .appendSelect('g')
-      .attr('transform', `translate(${props.margin.left}, ${props.margin.top})`);
-
-    const statesG = g.appendSelect('g.states-g-group')
-      .selectAll('.state')
-      .data(props.stAbbr, d => d);
-
-    const stateGCon = statesG
-      .enter()
-      .appendSelect('g')
-      .attr('class', (st) => {
-        return `state ${st}`;
-      })
-      .merge(statesG)
-
-    stateGCon
-      .attr('transform', (st) => {
-        const left = statePosition[st].column * smallW;
-        const top = statePosition[st].row * smallH;
-        return `translate(${left}, ${top})`;
-      });
-
-    stateGCon.appendSelect('path.area')
-      .style('fill', props.fill)
-      .attr('d', (d) => {
-        if (props.uniformScale) {
-          return area(data.states[d][props.parameter]);
-        } else {
-          return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
+    if (props.parameter==='cases' || props.parameter==='deaths') {
+      const data = this.data()[0];
+      const node = this.selection().node();
+      let max = 0;
+      const timeParse = d3.utcParse('%Y-%m-%dT%H:%M:%S.%LZ');
+      for (var key of Object.keys(data.states)) {
+        data.states[key].max = d3.max(data.states[key][props.parameter]);
+        if (data.states[key].max > max) {
+          max = data.states[key].max;
         }
-      });
+        data.states[key].avg = [];
+        data.states[key][props.parameter].reverse().forEach(function(d, i) {
+          data.states[key].avg.push(d3.mean(data.states[key][props.parameter].slice(i, (i + props.avg_days)), d => d < 0 ? 0 : d))
+        });
+        data.states[key].avg.reverse();
+        data.states[key][props.parameter].reverse();
 
-    stateGCon.appendSelect('path.line')
-      .style('stroke', props.stroke)
-      .style('stroke-width', props.strokeWidth)
-      .style('fill', 'none')
-      .attr('d', (d) => {
-        if (props.uniformScale) {
-          return line(data.states[d].avg);
-        } else {
-          return line(data.states[d].avg.map(e => e / data.states[d].max));
+        data.states[key].sortOrder = data.states[key].percentOfPeak[props.parameter];
+      }
+
+      props.stAbbr.sort(function(a, b) {
+        if (data.states[a].sortOrder < data.states[b].sortOrder) {
+          return 1;
         }
+        if (data.states[a].sortOrder > data.states[b].sortOrder) {
+          return -1;
+        }
+        return 0;
       });
 
-    statesG.exit()
-      .transition(transition)
-      .remove();
+      if (!data.series[0].getMonth) {
+        for (var i = 0; i < data.series.length; i++) {
+          data.series[i] = timeParse(data.series[i]);
+        }
+      }
 
+      const { width } = node.getBoundingClientRect();
 
-    const stateNames = this.selection()
-      .appendSelect('div.name-container')
-      .selectAll('.state-name')
-      .data(props.stAbbr);
+      const transition = d3.transition()
+        .duration(750);
 
-    stateNames.enter()
-      .appendSelect('div.state-name')
-      .merge(stateNames)
-      .style('top', function(d) {
-        const top = statePosition[d].row * smallH;
-        return `${top + props.paddingY}px`;
-      })
-      .style('left', function(d) {
-        const left = statePosition[d].column * smallW;
-        return `${left}px`;
-      })
-      .html(d => `${getArrow(data.states[d].avg)} <p>${data.states[d].stateAP}</p>`);
+      let divisor = width < props.mobileWidth ? 5 : 11;
+      divisor = width < 300 ? 4 : divisor;
+      const smallW = width / divisor;
+      const statePosition = {};
+      const grid = createGrid();
+      let rows = Math.floor(grid.length / divisor) + 1;
+      if (width < props.mobileWidth) {
+        rows = rows+1
+      }
+      const smallH = (props.height - props.margin.top) / (rows - 1);
 
-    function getArrow(numbers) {
-      const latest = numbers[numbers.length - 1];
-      const previousWeek = numbers[numbers.length - 8];
-      const weekBefore = numbers[numbers.length - 15];
-      if (latest > previousWeek && previousWeek > weekBefore) {
-        return upArrow;
-      } else if (latest < previousWeek && previousWeek < weekBefore) {
-        return downArrow;
+      const scaleXTime = d3.scaleTime()
+        .domain(d3.extent(data.series))
+        .range([0, smallW - props.paddingX]);
+
+      const scaleY = d3.scaleLinear();
+      if (props.uniformScale) {
+        scaleY.domain([0, max])
+          .range([smallH * 0.95, -smallH * -0.6])
       } else {
-        return '';
+        scaleY.domain([0, 1])
+          .range([smallH * 0.95, smallH * 0.25]);
       }
-    }
 
-    function createGrid() {
-      const gridArr = [];
-      let row = -1;
-      for (let i = 0; i < 88; i++) {
-        const column = i % 11;
-        row = column === 0 ? row + 1 : row;
+      const line = d3.line()
+        .x((d, i) => scaleXTime(data.series[i]))
+        .y((d, i) => scaleY(d ? d : 0))
+        .curve(d3.curveMonotoneX);
 
-        const obj = {
-          row: row,
-          column: column,
-          st: props.stateGridLookup[`${row}-${column}`]
-            ? props.stateGridLookup[`${row}-${column}`]
-            : null,
-        };
+      const area = d3.area()
+        .x((d, i) => scaleXTime(data.series[i]))
+        .y1((d, i) => scaleY(d))
+        .y0(scaleY(0))
+        .curve(d3.curveStep);
 
-        gridArr.push(obj);
-
-        const st = props.stateGridLookup[`${row}-${column}`]
-          ? props.stateGridLookup[`${row}-${column}`]
-          : null;
-
-        if (st) {
-          statePosition[st] = obj;
+      const g = this.selection()
+        .appendSelect('svg') // see docs in ./utils/d3.js
+        .attr('width', width)
+        .attr('height', props.height)
+        .appendSelect('g')
+        .attr('transform', `translate(${props.margin.left}, ${props.margin.top})`);
+  
+      const statesG = g.appendSelect('g.states-g-group')
+        .selectAll('.state')
+        .data(props.stAbbr, d => d);
+  
+      const stateGCon = statesG
+        .enter()
+        .appendSelect('g')
+        .attr('class', (st) => {
+          return `state ${st}`;
+        })
+        .merge(statesG)
+  
+      stateGCon
+        .attr('transform', (st) => {
+          const left = statePosition[st].column * smallW;
+          const top = statePosition[st].row * smallH;
+          return `translate(${left}, ${top})`;
+        });
+  
+      stateGCon.appendSelect('path.area')
+        .style('fill', props.fill)
+        .attr('d', (d) => {
+          if (props.uniformScale) {
+            return area(data.states[d][props.parameter]);
+          } else {
+            return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
+          }
+        });
+  
+      stateGCon.appendSelect('path.line')
+        .style('stroke', props.stroke)
+        .style('stroke-width', props.strokeWidth)
+        .style('fill', 'none')
+        .attr('d', (d) => {
+          if (props.uniformScale) {
+            return line(data.states[d].avg);
+          } else {
+            return line(data.states[d].avg.map(e => e / data.states[d].max));
+          }
+        });
+  
+      statesG.exit()
+        .transition(transition)
+        .remove();
+  
+      const stateNames = this.selection()
+        .appendSelect('div.name-container')
+        .selectAll('.state-name')
+        .data(props.stAbbr);
+  
+      stateNames.enter()
+        .appendSelect('div.state-name')
+        .merge(stateNames)
+        .each(function(d) {
+          if (data.states[d].percentOfPeak[props.parameter]>=.9) {
+            d3.select(this).classed('bold', true)
+          }
+        })
+        .style('top', function(d) {
+          const top = statePosition[d].row * smallH;
+          return `${top + props.paddingY}px`;
+        })
+        .style('left', function(d) {
+          const left = statePosition[d].column * smallW;
+          return `${left}px`;
+        })
+        .html(d => `${getArrow(data.states[d].avg)} <p>${data.states[d].stateAP}</p>`);
+  
+      function getArrow(numbers) {
+        const latest = numbers[numbers.length - 1];
+        const previousWeek = numbers[numbers.length - 8];
+        const weekBefore = numbers[numbers.length - 15];
+        if (latest > previousWeek && previousWeek > weekBefore) {
+          return upArrow;
+        } else if (latest < previousWeek && previousWeek < weekBefore) {
+          return downArrow;
+        } else {
+          return '';
         }
       }
-      return gridArr;
-    }
-    return this;
+  
+      function createGrid() {
+        const gridArr = [];
+        let row = -1;
+        console.log(width)
+        if (width >= props.mobileWidth) {
+          for (let i = 0; i < 88; i++) {
+            const column = i % 11;
+            row = column === 0 ? row + 1 : row;
+  
+            const obj = {
+              row: row,
+              column: column,
+              st: props.stateGridLookup[`${row}-${column}`]
+                ? props.stateGridLookup[`${row}-${column}`]
+                : null,
+            };
+  
+            gridArr.push(obj);
+  
+            const st = props.stateGridLookup[`${row}-${column}`]
+              ? props.stateGridLookup[`${row}-${column}`]
+              : null;
+  
+            if (st) {
+              statePosition[st] = obj;
+            }
+          }
+        } else {
+          for (var i = 0; i < props.stAbbr.length; i++) {
+            const column = i % divisor;
+            row = column == 0 ? row + 1 : row;
+  
+            const obj = {
+              row: row,
+              column: column,
+              st: props.stAbbr[i],
+            };
+  
+            gridArr.push(obj);
+  
+            statePosition[props.stAbbr[i]] = obj;
+          }
+        }
+        return gridArr;
+      }
+      return this;}
   }
 }
 
