@@ -22,7 +22,7 @@ export default {
     file: path.resolve(process.cwd(), pkg.main),
     format: 'cjs',
   },
-  external: Object.keys(pkg.dependencies.filter(d => d !== 'd3-appendselect')),
+  external: Object.keys(pkg.dependencies).filter(d => d !== 'd3-appendselect'),
   plugins: [
     json(),
     alias({
