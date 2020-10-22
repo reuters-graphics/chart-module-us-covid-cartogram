@@ -2,8 +2,9 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var merge = _interopDefault(require('lodash/merge'));
+require('d3-appendselect');
 var d3 = require('d3');
+var merge = _interopDefault(require('lodash/merge'));
 
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -1246,26 +1247,6 @@ var ChartComponent = /*#__PURE__*/function () {
 
   return ChartComponent;
 }();
-
-d3.selection.prototype.appendSelect = function (querySelector) {
-  // Test querySlector w/ classes
-  if (!/^[a-zA-Z]+[0-9]?\.-?[_a-zA-Z][_a-zA-Z0-9.-]*[a-zA-Z0-9]*$/.test(querySelector)) {
-    // Test querySelector just an element
-    if (!/^[a-zA-Z]+[0-9]?$/.test(querySelector)) {
-      throw new Error("Invalid query selector passed to appendSelect. Must be an element with zero or more classes: \"div.myClass.another\". Got \"".concat(querySelector, "\"."));
-    }
-  }
-
-  var element = querySelector.split('.')[0];
-  var classes = querySelector.split('.').slice(1);
-  var selection = this.select(querySelector);
-  if (!selection.empty()) return selection;
-  selection = this.append(element);
-  classes.forEach(function (cls) {
-    return selection.classed(cls, true);
-  });
-  return selection;
-};
 
 var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
   _inherits(USStateCartogram, _ChartComponent);
