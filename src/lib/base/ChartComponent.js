@@ -1,3 +1,5 @@
+import 'd3-appendselect';
+
 import {
   ErrorDataType,
   ErrorDrawMethodUndefined,
