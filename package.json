@@ -1,5 +1,5 @@
 {
-  "name": "@reuters-graphics/chart-module",
+  "name": "@reuters-graphics/chart-module-us-covid-cartogram",
   "version": "0.0.1",
   "main": "dist/index.js",
   "author": "Jon McClure <jon.r.mcclure@gmail.com>",
