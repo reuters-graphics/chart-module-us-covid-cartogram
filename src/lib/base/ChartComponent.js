@@ -1,5 +1,3 @@
-import 'd3-appendselect';
-
 import {
   ErrorDataType,
   ErrorDrawMethodUndefined,
@@ -7,8 +5,8 @@ import {
   ErrorSelectorType
 } from './errorClasses';
 
+import d3 from '../d3';
 import merge from 'lodash/merge';
-import { select } from 'd3-selection';
 
 class ChartComponent {
   constructor(selector, props, data) {
@@ -28,7 +26,7 @@ class ChartComponent {
       throw new ErrorSelectorType(this.constructor.name);
     }
 
-    this._selection = select(selector);
+    this._selection = d3.select(selector);
     return this;
   }
 
