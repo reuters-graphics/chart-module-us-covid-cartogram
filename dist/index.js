@@ -2,7 +2,6 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-require('d3-appendselect');
 var d3 = require('d3');
 var merge = _interopDefault(require('lodash/merge'));
 
@@ -193,118 +192,37 @@ function _createSuper(Derived) {
   };
 }
 
-var ChartError = /*#__PURE__*/function (_Error) {
-  _inherits(ChartError, _Error);
+function appendSelect(cssSelector) {
+  let selection = this.select(cssSelector);
+  if (!selection.empty()) return selection;
 
-  var _super = _createSuper(ChartError);
+  // e.g., div#myId
+  const selectorWithID = /^[a-zA-Z]+[0-9]?#[a-zA-Z][a-zA-Z0-9-:._]*$/.test(cssSelector);
 
-  function ChartError() {
-    var _this;
+  if (selectorWithID) {
+    const [element, id] = cssSelector.split('#');
+    selection = this.append(element).attr('id', id);
 
-    var constructorName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Chart component';
-
-    _classCallCheck(this, ChartError);
-
-    _this = _super.call(this, constructorName);
-    _this.constructorName = constructorName;
-    _this.name = 'ChartComponentError';
-    return _this;
+    return selection;
   }
 
-  return ChartError;
-}( /*#__PURE__*/_wrapNativeSuper(Error));
-var ErrorDrawMethodUndefined = /*#__PURE__*/function (_ChartError) {
-  _inherits(ErrorDrawMethodUndefined, _ChartError);
+  // div.myClass.another
+  const selectorWithClasses = /^[a-zA-Z]+[0-9]?\.-?[_a-zA-Z][_a-zA-Z0-9.-]*[a-zA-Z0-9]*$/.test(cssSelector);
+  // div
+  const simpleSelector = /^[a-zA-Z]+[0-9]?$/.test(cssSelector);
 
-  var _super2 = _createSuper(ErrorDrawMethodUndefined);
+  if (selectorWithClasses || simpleSelector) {
+    const element = cssSelector.split('.')[0];
+    const classes = cssSelector.split('.').slice(1);
 
-  function ErrorDrawMethodUndefined() {
-    var _this2;
+    selection = this.append(element);
+    classes.forEach(cls => selection.classed(cls, true));
 
-    _classCallCheck(this, ErrorDrawMethodUndefined);
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    _this2 = _super2.call.apply(_super2, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this2), "message", "".concat(_this2.constructorName, " should have a draw method"));
-
-    return _this2;
+    return selection;
   }
 
-  return ErrorDrawMethodUndefined;
-}(ChartError);
-var ErrorSelectorType = /*#__PURE__*/function (_ChartError2) {
-  _inherits(ErrorSelectorType, _ChartError2);
-
-  var _super3 = _createSuper(ErrorSelectorType);
-
-  function ErrorSelectorType() {
-    var _this3;
-
-    _classCallCheck(this, ErrorSelectorType);
-
-    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
-    }
-
-    _this3 = _super3.call.apply(_super3, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this3), "message", "".concat(_this3.constructorName, " selector should be a DOM Element or selector string"));
-
-    return _this3;
-  }
-
-  return ErrorSelectorType;
-}(ChartError);
-var ErrorPropsType = /*#__PURE__*/function (_ChartError3) {
-  _inherits(ErrorPropsType, _ChartError3);
-
-  var _super4 = _createSuper(ErrorPropsType);
-
-  function ErrorPropsType() {
-    var _this4;
-
-    _classCallCheck(this, ErrorPropsType);
-
-    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      args[_key3] = arguments[_key3];
-    }
-
-    _this4 = _super4.call.apply(_super4, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this4), "message", "".concat(_this4.constructorName, " props should be an Object"));
-
-    return _this4;
-  }
-
-  return ErrorPropsType;
-}(ChartError);
-var ErrorDataType = /*#__PURE__*/function (_ChartError4) {
-  _inherits(ErrorDataType, _ChartError4);
-
-  var _super5 = _createSuper(ErrorDataType);
-
-  function ErrorDataType() {
-    var _this5;
-
-    _classCallCheck(this, ErrorDataType);
-
-    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      args[_key4] = arguments[_key4];
-    }
-
-    _this5 = _super5.call.apply(_super5, [this].concat(args));
-
-    _defineProperty(_assertThisInitialized(_this5), "message", "".concat(_this5.constructorName, " data should be an Array"));
-
-    return _this5;
-  }
-
-  return ErrorDataType;
-}(ChartError);
+  throw new Error(`Invalid CSS selector passed to appendSelect. Must be an element with zero or more classes or an ID: "div", "div#myId" or "div.myClass.another". Got "${cssSelector}".`);
+}
 
 var xhtml = "http://www.w3.org/1999/xhtml";
 
@@ -1164,6 +1082,121 @@ function select(selector) {
       : new Selection([[selector]], root);
 }
 
+selection.prototype.appendSelect = appendSelect;
+
+var ChartError = /*#__PURE__*/function (_Error) {
+  _inherits(ChartError, _Error);
+
+  var _super = _createSuper(ChartError);
+
+  function ChartError() {
+    var _this;
+
+    var constructorName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Chart component';
+
+    _classCallCheck(this, ChartError);
+
+    _this = _super.call(this, constructorName);
+    _this.constructorName = constructorName;
+    _this.name = 'ChartComponentError';
+    return _this;
+  }
+
+  return ChartError;
+}( /*#__PURE__*/_wrapNativeSuper(Error));
+var ErrorDrawMethodUndefined = /*#__PURE__*/function (_ChartError) {
+  _inherits(ErrorDrawMethodUndefined, _ChartError);
+
+  var _super2 = _createSuper(ErrorDrawMethodUndefined);
+
+  function ErrorDrawMethodUndefined() {
+    var _this2;
+
+    _classCallCheck(this, ErrorDrawMethodUndefined);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    _this2 = _super2.call.apply(_super2, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this2), "message", "".concat(_this2.constructorName, " should have a draw method"));
+
+    return _this2;
+  }
+
+  return ErrorDrawMethodUndefined;
+}(ChartError);
+var ErrorSelectorType = /*#__PURE__*/function (_ChartError2) {
+  _inherits(ErrorSelectorType, _ChartError2);
+
+  var _super3 = _createSuper(ErrorSelectorType);
+
+  function ErrorSelectorType() {
+    var _this3;
+
+    _classCallCheck(this, ErrorSelectorType);
+
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    _this3 = _super3.call.apply(_super3, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this3), "message", "".concat(_this3.constructorName, " selector should be a DOM Element or selector string"));
+
+    return _this3;
+  }
+
+  return ErrorSelectorType;
+}(ChartError);
+var ErrorPropsType = /*#__PURE__*/function (_ChartError3) {
+  _inherits(ErrorPropsType, _ChartError3);
+
+  var _super4 = _createSuper(ErrorPropsType);
+
+  function ErrorPropsType() {
+    var _this4;
+
+    _classCallCheck(this, ErrorPropsType);
+
+    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
+    }
+
+    _this4 = _super4.call.apply(_super4, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this4), "message", "".concat(_this4.constructorName, " props should be an Object"));
+
+    return _this4;
+  }
+
+  return ErrorPropsType;
+}(ChartError);
+var ErrorDataType = /*#__PURE__*/function (_ChartError4) {
+  _inherits(ErrorDataType, _ChartError4);
+
+  var _super5 = _createSuper(ErrorDataType);
+
+  function ErrorDataType() {
+    var _this5;
+
+    _classCallCheck(this, ErrorDataType);
+
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
+    }
+
+    _this5 = _super5.call.apply(_super5, [this].concat(args));
+
+    _defineProperty(_assertThisInitialized(_this5), "message", "".concat(_this5.constructorName, " data should be an Array"));
+
+    return _this5;
+  }
+
+  return ErrorDataType;
+}(ChartError);
+
 var ChartComponent = /*#__PURE__*/function () {
   function ChartComponent(selector, props, data) {
     _classCallCheck(this, ChartComponent);
@@ -1492,7 +1525,7 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var line = d3.line().x(function (d, i) {
             return scaleXTime(data.series[i]);
           }).y(function (d, i) {
-            return scaleY(d ? d : 0);
+            return scaleY(d || 0);
           }).curve(d3.curveMonotoneX);
           var area = d3.area().x(function (d, i) {
             return scaleXTime(data.series[i]);
@@ -1537,7 +1570,7 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var stateNames = _this2.selection().appendSelect('div.name-container').selectAll('.state-name').data(props.stAbbr);
 
           stateNames.enter().appendSelect('div.state-name').merge(stateNames).each(function (d) {
-            if (data.states[d].percentOfPeak[props.parameter] >= .9) {
+            if (data.states[d].percentOfPeak[props.parameter] >= 0.9) {
               d3.select(this).classed('bold', true);
             }
           }).style('top', function (d) {
