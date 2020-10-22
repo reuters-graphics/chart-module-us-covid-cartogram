@@ -1,9 +1,5 @@
-// eslint-disable-next-line
-import 'd3-appendselect';
-
-import * as d3 from 'd3';
-
 import ChartComponent from './base/ChartComponent';
+import d3 from './d3';
 
 class USStateCartogram extends ChartComponent {
   defaultProps = {
