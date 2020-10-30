@@ -426,14 +426,15 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
     _this = _super.call.apply(_super, [this].concat(args));
 
     _defineProperty(_assertThisInitialized(_this), "defaultProps", {
-      stroke: '#eec331',
-      strokeWidth: 1,
+      stroke: '#888',
+      strokeWidth: 2,
       fill: 'rgba(255, 255, 255, 0.3)',
       height: 600,
       avg_days: 7,
       bars: true,
       paddingX: 5,
       paddingY: 5,
+      paddingTitle: 2,
       mobileWidth: 650,
       uniformScale: false,
       margin: {
@@ -545,7 +546,6 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var createGrid = function createGrid() {
             var gridArr = [];
             var row = -1;
-            console.log(width);
 
             if (width >= props.mobileWidth) {
               for (var _i2 = 0; _i2 < 88; _i2++) {
@@ -590,11 +590,9 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
 
           for (var _i = 0, _Object$keys = Object.keys(data.states); _i < _Object$keys.length; _i++) {
             key = _Object$keys[_i];
-            data.states[key].max = d3.max(data.states[key][props.parameter]);
-
-            if (data.states[key].max > max) {
-              max = data.states[key].max;
-            }
+            data.states[key].max = d3.max(data.states[key][props.parameter]); // if (data.states[key].max > max) {
+            //   max = data.states[key].max;
+            // }
 
             data.states[key].avg = [];
             data.states[key][props.parameter].reverse().forEach(function (d, i) {
@@ -603,7 +601,10 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
               }));
             });
             data.states[key].avg.reverse();
-            data.states[key][props.parameter].reverse();
+            data.states[key][props.parameter].reverse(); // Use max of average
+
+            var maxAvg = d3.max(data.states[key].avg);
+            if (maxAvg > max) max = maxAvg;
             data.states[key].sortOrder = data.states[key].percentOfPeak[props.parameter];
           }
 
@@ -628,7 +629,7 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var _node$getBoundingClie = node.getBoundingClientRect(),
               width = _node$getBoundingClie.width;
 
-          var transition = d3.transition().duration(750);
+          var transition = d3.transition().duration(250);
           var divisor = width < props.mobileWidth ? 5 : 11;
           divisor = width < 300 ? 4 : divisor;
           var smallW = width / divisor;
@@ -645,62 +646,59 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var scaleY = d3.scaleLinear();
 
           if (props.uniformScale) {
-            scaleY.domain([0, max]).range([smallH * 0.95, -smallH * -0.6]);
+            scaleY.domain([0, max]).range([smallH * 0.90, smallH * 0.25 + props.paddingTitle]);
           } else {
-            scaleY.domain([0, 1]).range([smallH * 0.95, smallH * 0.25]);
+            scaleY.domain([0, 1]).range([smallH * 0.90, smallH * 0.25 + props.paddingTitle]);
           }
 
           var line = d3.line().x(function (d, i) {
             return scaleXTime(data.series[i]);
           }).y(function (d, i) {
             return scaleY(d || 0);
-          }).curve(d3.curveMonotoneX);
-          var area = d3.area().x(function (d, i) {
-            return scaleXTime(data.series[i]);
-          }).y1(function (d, i) {
-            return scaleY(d);
-          }).y0(scaleY(0)).curve(d3.curveStep);
+          }).curve(d3.curveMonotoneX); // const area = d3.area()
+          //   .x((d, i) => scaleXTime(data.series[i]))
+          //   .y1((d, i) => scaleY(d))
+          //   .y0(scaleY(0))
+          //   .curve(d3.curveStep);
 
           var g = _this2.selection().appendSelect('svg') // see docs in ./utils/d3.js
           .attr('width', width).attr('height', props.height).appendSelect('g').attr('transform', "translate(".concat(props.margin.left, ", ").concat(props.margin.top, ")"));
 
-          var statesG = g.appendSelect('g.states-g-group').selectAll('.state').data(props.stAbbr, function (d) {
+          var statesG = g.selectAll('.state').data(props.stAbbr, function (d) {
             return d;
           });
-          var stateGCon = statesG.enter().appendSelect('g').attr('class', function (st) {
+          statesG.enter().appendSelect('g').attr('class', function (st) {
             return "state ".concat(st);
-          }).merge(statesG);
-          stateGCon.attr('transform', function (st) {
+          }).merge(statesG).attr('transform', function (st) {
             var left = statePosition[st].column * smallW;
             var top = statePosition[st].row * smallH;
             return "translate(".concat(left, ", ").concat(top, ")");
-          });
-          stateGCon.appendSelect('path.area').style('fill', props.fill).attr('d', function (d) {
-            if (props.uniformScale) {
-              return area(data.states[d][props.parameter]);
-            } else {
-              return area(data.states[d][props.parameter].map(function (e) {
-                return e / data.states[d].max;
-              }));
-            }
-          });
-          stateGCon.appendSelect('path.line').style('stroke', props.stroke).style('stroke-width', props.strokeWidth).style('fill', 'none').attr('d', function (d) {
+          }); // stateGCon.appendSelect('path.area')
+          //   .style('fill', props.fill)
+          //   .attr('d', (d) => {
+          //     if (props.uniformScale) {
+          //       return area(data.states[d][props.parameter]);
+          //     } else {
+          //       return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
+          //     }
+          //   });
+
+          statesG.appendSelect('path.line').style('stroke', props.stroke).style('stroke-width', props.strokeWidth).style('fill', 'none').transition(transition).attr('d', function (d) {
             if (props.uniformScale) {
               return line(data.states[d].avg);
             } else {
               return line(data.states[d].avg.map(function (e) {
-                return e / data.states[d].max;
+                return e / d3.max(data.states[d].avg);
               }));
             }
           });
           statesG.exit().transition(transition).remove();
 
-          var stateNames = _this2.selection().appendSelect('div.name-container').selectAll('.state-name').data(props.stAbbr);
+          var stateNamesContainer = _this2.selection().appendSelect('div.name-container');
 
-          stateNames.enter().appendSelect('div.state-name').merge(stateNames).each(function (d) {
-            if (data.states[d].percentOfPeak[props.parameter] >= 0.9) {
-              d3.select(this).classed('bold', true);
-            }
+          var stateNames = stateNamesContainer.selectAll('.state-name').data(props.stAbbr);
+          stateNames.enter().append('div').attr('class', 'state-name').merge(stateNames).classed('bold', function (d) {
+            return data.states[d].percentOfPeak[props.parameter] >= 0.9;
           }).style('top', function (d) {
             var top = statePosition[d].row * smallH;
             return "".concat(top + props.paddingY, "px");

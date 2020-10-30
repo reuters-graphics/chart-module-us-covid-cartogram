@@ -3,14 +3,15 @@ import d3 from './d3';
 
 class USStateCartogram extends ChartComponent {
   defaultProps = {
-    stroke: '#eec331',
-    strokeWidth: 1,
+    stroke: '#888',
+    strokeWidth: 2,
     fill: 'rgba(255, 255, 255, 0.3)',
     height: 600,
     avg_days: 7,
     bars: true,
     paddingX: 5,
     paddingY: 5,
+    paddingTitle: 2,
     mobileWidth: 650,
 
     uniformScale: false,
@@ -42,6 +43,7 @@ class USStateCartogram extends ChartComponent {
   draw() {
     const downArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" class="svg-inline--fa fa-caret-down fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"></path></svg>';
     const upArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-up" class="svg-inline--fa fa-caret-up fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M288.662 352H31.338c-17.818 0-26.741-21.543-14.142-34.142l128.662-128.662c7.81-7.81 20.474-7.81 28.284 0l128.662 128.662c12.6 12.599 3.676 34.142-14.142 34.142z"></path></svg>';
+
     const props = this.props();
     if (props.parameter === 'cases' || props.parameter === 'deaths') {
       const data = this.data()[0];
@@ -50,15 +52,19 @@ class USStateCartogram extends ChartComponent {
       const timeParse = d3.utcParse('%Y-%m-%dT%H:%M:%S.%LZ');
       for (var key of Object.keys(data.states)) {
         data.states[key].max = d3.max(data.states[key][props.parameter]);
-        if (data.states[key].max > max) {
-          max = data.states[key].max;
-        }
+        // if (data.states[key].max > max) {
+        //   max = data.states[key].max;
+        // }
         data.states[key].avg = [];
         data.states[key][props.parameter].reverse().forEach(function(d, i) {
           data.states[key].avg.push(d3.mean(data.states[key][props.parameter].slice(i, (i + props.avg_days)), d => d < 0 ? 0 : d));
         });
         data.states[key].avg.reverse();
         data.states[key][props.parameter].reverse();
+
+        // Use max of average
+        const maxAvg = d3.max(data.states[key].avg);
+        if (maxAvg > max) max = maxAvg;
 
         data.states[key].sortOrder = data.states[key].percentOfPeak[props.parameter];
       }
@@ -82,7 +88,7 @@ class USStateCartogram extends ChartComponent {
       const { width } = node.getBoundingClientRect();
 
       const transition = d3.transition()
-        .duration(750);
+        .duration(250);
 
       let divisor = width < props.mobileWidth ? 5 : 11;
       divisor = width < 300 ? 4 : divisor;
@@ -102,10 +108,10 @@ class USStateCartogram extends ChartComponent {
       const scaleY = d3.scaleLinear();
       if (props.uniformScale) {
         scaleY.domain([0, max])
-          .range([smallH * 0.95, -smallH * -0.6]);
+          .range([smallH * 0.90, (smallH * 0.25) + props.paddingTitle]);
       } else {
         scaleY.domain([0, 1])
-          .range([smallH * 0.95, smallH * 0.25]);
+          .range([smallH * 0.90, (smallH * 0.25) + props.paddingTitle]);
       }
 
       const line = d3.line()
@@ -113,11 +119,11 @@ class USStateCartogram extends ChartComponent {
         .y((d, i) => scaleY(d || 0))
         .curve(d3.curveMonotoneX);
 
-      const area = d3.area()
-        .x((d, i) => scaleXTime(data.series[i]))
-        .y1((d, i) => scaleY(d))
-        .y0(scaleY(0))
-        .curve(d3.curveStep);
+      // const area = d3.area()
+      //   .x((d, i) => scaleXTime(data.series[i]))
+      //   .y1((d, i) => scaleY(d))
+      //   .y0(scaleY(0))
+      //   .curve(d3.curveStep);
 
       const g = this.selection()
         .appendSelect('svg') // see docs in ./utils/d3.js
@@ -126,44 +132,42 @@ class USStateCartogram extends ChartComponent {
         .appendSelect('g')
         .attr('transform', `translate(${props.margin.left}, ${props.margin.top})`);
 
-      const statesG = g.appendSelect('g.states-g-group')
-        .selectAll('.state')
+      const statesG = g.selectAll('.state')
         .data(props.stAbbr, d => d);
 
-      const stateGCon = statesG
+      statesG
         .enter()
         .appendSelect('g')
         .attr('class', (st) => {
           return `state ${st}`;
         })
-        .merge(statesG);
-
-      stateGCon
+        .merge(statesG)
         .attr('transform', (st) => {
           const left = statePosition[st].column * smallW;
           const top = statePosition[st].row * smallH;
           return `translate(${left}, ${top})`;
         });
 
-      stateGCon.appendSelect('path.area')
-        .style('fill', props.fill)
-        .attr('d', (d) => {
-          if (props.uniformScale) {
-            return area(data.states[d][props.parameter]);
-          } else {
-            return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
-          }
-        });
+      // stateGCon.appendSelect('path.area')
+      //   .style('fill', props.fill)
+      //   .attr('d', (d) => {
+      //     if (props.uniformScale) {
+      //       return area(data.states[d][props.parameter]);
+      //     } else {
+      //       return area(data.states[d][props.parameter].map(e => e / data.states[d].max));
+      //     }
+      //   });
 
-      stateGCon.appendSelect('path.line')
+      statesG.appendSelect('path.line')
         .style('stroke', props.stroke)
         .style('stroke-width', props.strokeWidth)
         .style('fill', 'none')
+        .transition(transition)
         .attr('d', (d) => {
           if (props.uniformScale) {
             return line(data.states[d].avg);
           } else {
-            return line(data.states[d].avg.map(e => e / data.states[d].max));
+            return line(data.states[d].avg.map(e => e / d3.max(data.states[d].avg)));
           }
         });
 
@@ -171,19 +175,17 @@ class USStateCartogram extends ChartComponent {
         .transition(transition)
         .remove();
 
-      const stateNames = this.selection()
-        .appendSelect('div.name-container')
-        .selectAll('.state-name')
+      const stateNamesContainer = this.selection()
+        .appendSelect('div.name-container');
+
+      const stateNames = stateNamesContainer.selectAll('.state-name')
         .data(props.stAbbr);
 
       stateNames.enter()
-        .appendSelect('div.state-name')
+        .append('div')
+        .attr('class', 'state-name')
         .merge(stateNames)
-        .each(function(d) {
-          if (data.states[d].percentOfPeak[props.parameter] >= 0.9) {
-            d3.select(this).classed('bold', true);
-          }
-        })
+        .classed('bold', d => data.states[d].percentOfPeak[props.parameter] >= 0.9)
         .style('top', function(d) {
           const top = statePosition[d].row * smallH;
           return `${top + props.paddingY}px`;
@@ -210,7 +212,6 @@ class USStateCartogram extends ChartComponent {
       function createGrid() {
         const gridArr = [];
         let row = -1;
-        console.log(width);
         if (width >= props.mobileWidth) {
           for (let i = 0; i < 88; i++) {
             const column = i % 11;
