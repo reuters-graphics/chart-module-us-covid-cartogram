@@ -712,7 +712,7 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
             var x = scaleXTime(date);
             var y = scaleY(datumY);
             d3.select(parent).appendSelect('circle.tooltip').attr('r', 3).attr('cx', x).attr('cy', y).style('fill', 'white').style('stroke', 'white').style('stroke-width', 1);
-            d3.select(parent).appendSelect('text.tooltip.datum').attr('x', x).attr('y', y < scaleY.range()[1] / 2 ? y + 20 : y - 10).style('text-align', 'center').style('text-anchor', x > smallW / 2 ? 'end' : 'start').text(numberFormat(Math.round(datum)));
+            d3.select(parent).appendSelect('text.tooltip.datum').attr('x', x).attr('y', y < scaleY.range()[1] / 2 ? y + 20 : y - 7).style('text-align', 'center').style('text-anchor', x > smallW / 2 ? 'end' : 'start').text(numberFormat(Math.round(datum)));
             d3.select(parent).appendSelect('text.tooltip.date').attr('x', x).attr('y', scaleY.range()[0] + 13).text(dateFormat(date)).style('text-anchor', x > smallW / 2 ? 'end' : 'start');
           });
           touchBox.on('mouseout touchleave touchcancel', function (d, i, nodes) {

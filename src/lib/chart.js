@@ -213,7 +213,7 @@ class USStateCartogram extends ChartComponent {
 
         d3.select(parent).appendSelect('text.tooltip.datum')
           .attr('x', x)
-          .attr('y', y < scaleY.range()[1] / 2 ? y + 20 : y - 10)
+          .attr('y', y < scaleY.range()[1] / 2 ? y + 20 : y - 7)
           .style('text-align', 'center')
           .style('text-anchor', x > smallW / 2 ? 'end' : 'start')
           .text(numberFormat(Math.round(datum)));
