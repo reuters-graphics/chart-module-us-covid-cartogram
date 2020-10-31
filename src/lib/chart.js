@@ -192,6 +192,7 @@ class USStateCartogram extends ChartComponent {
 
       touchBox.on('mouseover mousemove touchenter touchstart touchmove', (d, i, nodes) => {
         if (!d3.event) return;
+        this.selection().selectAll('.tooltip').remove();
         const parent = nodes[i].parentNode;
         const mx = d3.mouse(parent)[0];
         inverseX.range([0, data.states[d].avg.length + props.avg_days]);

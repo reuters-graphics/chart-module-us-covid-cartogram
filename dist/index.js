@@ -701,6 +701,9 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
           var touchBox = statesG.appendSelect('g.dummy-container').appendSelect('rect').attr('height', smallH).attr('width', smallW).style('cursor', 'crosshair').style('opacity', 0);
           touchBox.on('mouseover mousemove touchenter touchstart touchmove', function (d, i, nodes) {
             if (!d3.event) return;
+
+            _this2.selection().selectAll('.tooltip').remove();
+
             var parent = nodes[i].parentNode;
             var mx = d3.mouse(parent)[0];
             inverseX.range([0, data.states[d].avg.length + props.avg_days]);
