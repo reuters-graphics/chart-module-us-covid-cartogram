@@ -711,7 +711,9 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
             index = index < 0 ? 0 : index >= data.states[d].avg.length ? data.states[d].avg.length - 1 : index;
             var datum = data.states[d].avg[index];
             var datumY = props.uniformScale ? datum : datum / d3.max(data.states[d].avg);
-            var date = data.series[index];
+            var date = new Date(data.series[index]); // Hacky way to ensure date stays in US timezones
+
+            date.setHours(date.getHours() + 6);
             var x = scaleXTime(date);
             var y = scaleY(datumY);
             d3.select(parent).appendSelect('circle.tooltip').attr('r', 3).attr('cx', x).attr('cy', y).style('fill', 'white').style('stroke', 'white').style('stroke-width', 1);

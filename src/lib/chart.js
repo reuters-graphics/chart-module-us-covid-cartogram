@@ -201,7 +201,9 @@ class USStateCartogram extends ChartComponent {
         const datum = data.states[d].avg[index];
         const datumY = props.uniformScale ?
           datum : datum / d3.max(data.states[d].avg);
-        const date = data.series[index];
+        const date = new Date(data.series[index]);
+        // Hacky way to ensure date stays in US timezones
+        date.setHours(date.getHours() + 6);
         const x = scaleXTime(date);
         const y = scaleY(datumY);
         d3.select(parent).appendSelect('circle.tooltip')
