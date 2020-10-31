@@ -703,9 +703,9 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
             if (!d3.event) return;
             var parent = nodes[i].parentNode;
             var mx = d3.mouse(parent)[0];
-            inverseX.range([0, data.states[d].avg.length - 1]);
+            inverseX.range([0, data.states[d].avg.length + props.avg_days]);
             var index = Math.round(inverseX(mx));
-            index = index < 0 ? 0 : index;
+            index = index < 0 ? 0 : index >= data.states[d].avg.length ? data.states[d].avg.length - 1 : index;
             var datum = data.states[d].avg[index];
             var datumY = props.uniformScale ? datum : datum / d3.max(data.states[d].avg);
             var date = data.series[index];
