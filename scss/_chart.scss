@@ -26,6 +26,17 @@ $half-white: hsla(0,0%,100%,.75);
   .state-name.bold p{
     font-weight: bold;
   }
-  
+  .tooltip{
+    pointer-events: none;
+  }
+  text.tooltip{
+    text-shadow: 2px 2px 10px black;
+    font-size: 14px;
+    fill: #fff;
+    padding: 0;
+    &.date{
+      font-size: 11px;
+    }
+  }
 
 }

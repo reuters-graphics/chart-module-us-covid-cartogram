@@ -37,13 +37,6 @@ const ChartComponent = () => {
         uniformScale,
       })
       .draw();
-
-    // setTimeout(() => {
-    //   console.log('running');
-    //   chart
-    //     .props({ uniformScale: true })
-    //     .draw();
-    // }, 1000);
   }, [chart, chartContainer, data, parameter, uniformScale]);
 
   // Handle chart resize
