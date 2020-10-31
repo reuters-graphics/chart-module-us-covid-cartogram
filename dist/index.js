@@ -4,6 +4,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var d3 = require('d3');
 var merge = _interopDefault(require('lodash/merge'));
+var D3Locale = _interopDefault(require('@reuters-graphics/d3-locale'));
 
 function _typeof(obj) {
   "@babel/helpers - typeof";
@@ -427,7 +428,7 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
 
     _defineProperty(_assertThisInitialized(_this), "defaultProps", {
       stroke: '#888',
-      strokeWidth: 2,
+      strokeWidth: 1.5,
       fill: 'rgba(255, 255, 255, 0.3)',
       height: 600,
       avg_days: 7,
@@ -523,6 +524,9 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
       var downArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-down" class="svg-inline--fa fa-caret-down fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"></path></svg>';
       var upArrow = '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="caret-up" class="svg-inline--fa fa-caret-up fa-w-10 " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M288.662 352H31.338c-17.818 0-26.741-21.543-14.142-34.142l128.662-128.662c7.81-7.81 20.474-7.81 28.284 0l128.662 128.662c12.6 12.599 3.676 34.142-14.142 34.142z"></path></svg>';
       var props = this.props();
+      var locale = new D3Locale(props.locale);
+      var dateFormat = locale.formatTime('%b. %d');
+      var numberFormat = locale.format(',');
 
       if (props.parameter === 'cases' || props.parameter === 'deaths') {
         var key;
@@ -643,12 +647,13 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
 
           var smallH = (props.height - props.margin.top) / (rows - 1);
           var scaleXTime = d3.scaleTime().domain(d3.extent(data.series)).range([0, smallW - props.paddingX]);
+          var inverseX = d3.scaleLinear().domain([0, smallW]);
           var scaleY = d3.scaleLinear();
 
           if (props.uniformScale) {
-            scaleY.domain([0, max]).range([smallH * 0.90, smallH * 0.25 + props.paddingTitle]);
+            scaleY.domain([0, max]).range([smallH * 0.90 - 5, smallH * 0.25 + props.paddingTitle]);
           } else {
-            scaleY.domain([0, 1]).range([smallH * 0.90, smallH * 0.25 + props.paddingTitle]);
+            scaleY.domain([0, 1]).range([smallH * 0.90 - 5, smallH * 0.25 + props.paddingTitle]);
           }
 
           var line = d3.line().x(function (d, i) {
@@ -693,6 +698,27 @@ var USStateCartogram = /*#__PURE__*/function (_ChartComponent) {
             }
           });
           statesG.exit().transition(transition).remove();
+          var touchBox = statesG.appendSelect('g.dummy-container').appendSelect('rect').attr('height', smallH).attr('width', smallW).style('cursor', 'crosshair').style('opacity', 0);
+          touchBox.on('mouseover mousemove touchenter touchstart touchmove', function (d, i, nodes) {
+            if (!d3.event) return;
+            var parent = nodes[i].parentNode;
+            var mx = d3.mouse(parent)[0];
+            inverseX.range([0, data.states[d].avg.length - 1]);
+            var index = Math.round(inverseX(mx));
+            index = index < 0 ? 0 : index;
+            var datum = data.states[d].avg[index];
+            var datumY = props.uniformScale ? datum : datum / d3.max(data.states[d].avg);
+            var date = data.series[index];
+            var x = scaleXTime(date);
+            var y = scaleY(datumY);
+            d3.select(parent).appendSelect('circle.tooltip').attr('r', 3).attr('cx', x).attr('cy', y).style('fill', 'white').style('stroke', 'white').style('stroke-width', 1);
+            d3.select(parent).appendSelect('text.tooltip.datum').attr('x', x).attr('y', y < scaleY.range()[1] / 2 ? y + 20 : y - 10).style('text-align', 'center').style('text-anchor', x > smallW / 2 ? 'end' : 'start').text(numberFormat(Math.round(datum)));
+            d3.select(parent).appendSelect('text.tooltip.date').attr('x', x).attr('y', scaleY.range()[0] + 13).text(dateFormat(date)).style('text-anchor', x > smallW / 2 ? 'end' : 'start');
+          });
+          touchBox.on('mouseout touchleave touchcancel', function (d, i, nodes) {
+            var parent = nodes[i].parentNode;
+            d3.select(parent).selectAll('.tooltip').remove();
+          });
 
           var stateNamesContainer = _this2.selection().appendSelect('div.name-container');
 
